@@ -4,19 +4,22 @@ from langchain_openai import OpenAI
 from langchain.prompts import PromptTemplate
 import pdfplumber
 import nltk
-from fpdf import FPDF 
+import uuid
 
-# Load environment variables from .env file
+# Load environment variables and api key
 load_dotenv()
-# Ensure the API key is loaded
 api_key = os.getenv('OPENAI_API_KEY')
 
+
 # Step 1: PDF parsing
-def extract_pdf_text(pdf_file):
+def extract_text_from_pdf(pdf_file):
     texts_by_page = []
     with pdfplumber.open(pdf_file) as pdf:
         for page in pdf.pages:
-            texts_by_page.append(page.extract_text())
+            # Handle potential encoding issues by ignoring problematic characters
+            page_text = page.extract_text()
+            if page_text:
+                texts_by_page.append(page_text.encode('utf-8', errors='ignore').decode('utf-8'))
     return texts_by_page
 
 # Step 2: NLTK tokenization setup (if needed for future processing)
@@ -36,7 +39,7 @@ def edit_text(llm, text, corrections):
     prompt = f"""
     You are a meticulous editor. Here are some corrections that need to be applied:
     {corrections}
-    Note: You may ignore citations, simply place [citation needed] where a citation may belong
+    Note: for unsourced statements of fact, add [citation_needed] at the end of the offending sentence.
     Text:
     {text}
 
@@ -45,10 +48,10 @@ def edit_text(llm, text, corrections):
     # Send the prompt to the LLM and return the result
     return llm.run(prompt)
 
-# Step 4: Process PDF and generate error report
+# Step 4: Process PDF file and generate error report
 def analyze_pdf_for_errors(pdf_file):
     # Parse the PDF into text per page
-    texts_by_page = extract_pdf_text(pdf_file)
+    texts_by_page = extract_text_from_pdf(pdf_file)
 
     # Initialize the Langchain prompt template
     prompt_template = PromptTemplate(
@@ -92,28 +95,16 @@ def make_edits(llm, texts_by_page, error_report):
             corrected_pages.append(page_text)  # No corrections, keep the original text
     return corrected_pages
 
-# Step 6: Write the corrected text back into a PDF
-def save_corrected_pdf(corrected_texts, output_path):
-    print(corrected_text, 'corrected_text')
-    pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    
-    for page_num, corrected_text in enumerate(corrected_texts, start=1):
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        
-        # Split the text into lines and add each line to the PDF
-        lines = corrected_text.split('\n')
-        for line in lines:
-            pdf.multi_cell(0, 10, line)
-    
-    # Save the PDF to the specified output path
-    pdf.output(output_path)
-    print(f"Corrected PDF saved to {output_path}")
+# Step 6: Write the corrected text back into a new .txt file
+def save_corrected_txt(corrected_texts, output_path):
+    with open(output_path, 'w', encoding='utf-8') as file:
+        for page_num, corrected_text in enumerate(corrected_texts, start=1):
+            file.write(f"Page {page_num}:\n{corrected_text}\n\n")
+    print(f"Corrected text saved to {output_path}")
 
 # Step 7: Main program loop
 if __name__ == "__main__":
-    pdf_path = input('Please specify the path to your PDF file (e.g., /pdfs/example.pdf): ')
+    pdf_path = input('Please specify the path to your PDF file (e.g., pdfs/example.pdf): ')
     
     # Analyze the PDF for errors
     report, texts_by_page = analyze_pdf_for_errors(pdf_path)
@@ -128,18 +119,19 @@ if __name__ == "__main__":
     
     # Apply changes if the user chooses 'y'
     if implement_changes == 'y':
-        llm = OpenAI(openai_api_key=api_key)
+        llm = OpenAI(openai_api_key=api_key)  # Initialize LLM for making edits
         corrected_texts = make_edits(llm, texts_by_page, report)
         
         print("Edits applied. Here are the corrected texts per page:")
         for page_num, corrected_text in enumerate(corrected_texts, start=1):
             print(f"Page {page_num}:\n{corrected_text}")
         
-        # Create directory for corrected PDFs if it doesn't exist
-        os.makedirs('./corrected_pdfs', exist_ok=True)
+        # Create directory for corrected text files if it doesn't exist
+        os.makedirs('./corrected_texts', exist_ok=True)
         
-        # Save the corrected PDF to the specified directory
-        corrected_pdf_path = os.path.join('./corrected_pdfs', 'corrected_document.pdf')
-        save_corrected_pdf(corrected_texts, corrected_pdf_path)
+        # Save the corrected text file to the specified directory
+        unique_filename = f"corrected_document_{uuid.uuid4()}.txt"
+        corrected_txt_path = os.path.join('./corrected_texts', unique_filename)
+        save_corrected_txt(corrected_texts, corrected_txt_path)
     else:
         print("No changes were made.")

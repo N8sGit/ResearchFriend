@@ -14,7 +14,10 @@ Before running the tool, ensure that the following software is installed:
 
 1. **Python 3.8+**: Install the latest version of Python from [here](https://www.python.org/downloads/).
 2. **OpenAI API Key**: You need an API key from OpenAI to use their LLM models. Sign up for an API key at [OpenAI](https://beta.openai.com/signup/).
-
+3. Install requirements
+   ```bash
+   pip install -r requirements.txt
+   ```
 ## Setup Instructions
 
 Follow the steps below to get the tool running on your local machine.
@@ -32,8 +35,6 @@ source venv/bin/activate
 # On Windows:
 ```bash
 venv\Scripts\activate
-
-pip install -r requirements.txt
 ```
 
 Create a .env file in the root of the project directory to store your OPENAI_API_KEY

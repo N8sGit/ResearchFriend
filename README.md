@@ -1,9 +1,9 @@
 ### Research Friend
-Research friend is a simple research assistant tool built with langchain that takes a pdf, proofreads, identifies potential unsourced claims of fact, and points out unclear language. It then prints out a bulleted list of these issues. You are then given the option for the model to incorporate corrections for these errors into a new document and save the corrected text to /corrected_texts (as a .txt in case further editing is needed)
+Research friend is a simple research assistant tool built with langchain that takes a pdf, proofreads, identifies potential unsourced claims of fact, and points out unclear language. It then prints out a bulleted list of these issues along with the page number. You are then given the option for the model to incorporate corrections for these errors into a new document and save the corrected text to /corrected_texts (as a .txt in case further editing is needed)
 
-It's a more scalable and efficient way of detecting errors since it will work with a pdf of any length and the prompt has been optimized. It's less copy and pasting than using the ChatGPT app.
+It's a more scalable and efficient way of detecting errors since it will work with a pdf of any length and the prompt has been optimized. It's less copy and paste than using the ChatGPT app.
 
-Note: unsourced claims of fact will  [citation needed] comment next to them
+Note: unsourced claims of fact will  have  a [citation needed] comment inserted next to them
 
 ## Starting steps 
 Make sure you place your pdfs in /pdf directory. 

@@ -45,3 +45,7 @@ python main.py
 ```
 
 Run the main script to parse a PDF, generate error corrections, and save the corrected document.
+You will be prompted to enter the path to your pdf, e.g pdf/sample1.pdf
+After the edit suggestions are generated, you will be asked if you wish to have these changes performed by the model 
+type y for yes . The edited text will be output to /corrected_texts and given a unique id.
+Type n to terminate the script. 
